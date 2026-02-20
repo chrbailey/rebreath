@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Data files
+backend/data/uploads/
+backend/data/stems/
+backend/data/generated/
+
+# Build
+frontend/.next/
+frontend/out/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Models
+*.bin
+*.ggml
+*.pt
+*.pth
