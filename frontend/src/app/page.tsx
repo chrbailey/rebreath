@@ -124,6 +124,53 @@ export default function Home() {
               onFileSelected={handleFileSelected}
               isUploading={false}
             />
+            <div className="text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => {
+                  setTrack({
+                    track_id: "92761899",
+                    filename: "rick-springsteen.mp3",
+                    size: 307243,
+                    path: "/Volumes/OWC drive/Dev/music/rebreath/backend/data/uploads/92761899_rick-springsteen.mp3",
+                  });
+                  setStems({
+                    track_id: "92761899",
+                    stems: {
+                      vocals: "/files/stems/htdemucs/92761899_rick-springsteen/vocals.mp3",
+                      drums: "/files/stems/htdemucs/92761899_rick-springsteen/drums.mp3",
+                      bass: "/files/stems/htdemucs/92761899_rick-springsteen/bass.mp3",
+                      other: "/files/stems/htdemucs/92761899_rick-springsteen/other.mp3",
+                    },
+                  });
+                  setTranscription({
+                    track_id: "92761899",
+                    text: "I've done everything for you\nYou've done nothing for me\nI've done everything for you\nYou've done nothing for me",
+                    segments: [
+                      { start: 0.0, end: 3.6, text: "I've done everything for you" },
+                      { start: 4.6, end: 6.0, text: "You've done nothing for me" },
+                      { start: 6.0, end: 9.6, text: "I've done everything for you" },
+                      { start: 10.6, end: 12.6, text: "You've done nothing for me" },
+                    ],
+                    language: "en",
+                  });
+                  setAnalysis({
+                    track_id: "92761899",
+                    mood: "melancholic",
+                    energy: 5,
+                    genres: ["rock", "alternative rock", "indie rock"],
+                    themes: ["frustration", "one-sided relationship", "emotional exhaustion", "resentment", "imbalance"],
+                    tempo_feel: "medium",
+                    description: "An introspective rock track that explores the emotional toll of a one-sided relationship, with repetitive lyrics emphasizing the speaker's sense of sacrifice and lack of reciprocation.",
+                  });
+                  setStep("done");
+                }}
+              >
+                or load demo track
+              </Button>
+            </div>
 
             {/* Feature grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
