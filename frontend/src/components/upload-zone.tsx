@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Upload, Disc3 } from "lucide-react";
 
 interface UploadZoneProps {
   onFileSelected: (file: File) => void;
@@ -30,11 +30,11 @@ export function UploadZone({ onFileSelected, isUploading }: UploadZoneProps) {
   );
 
   return (
-    <Card
-      className={`relative border-2 border-dashed p-12 text-center transition-colors cursor-pointer ${
+    <div
+      className={`relative group rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden ${
         isDragging
-          ? "border-primary bg-primary/5"
-          : "border-muted-foreground/25 hover:border-primary/50"
+          ? "border-primary bg-primary/5 scale-[1.01]"
+          : "border-border/50 hover:border-primary/40"
       } ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -44,6 +44,9 @@ export function UploadZone({ onFileSelected, isUploading }: UploadZoneProps) {
       onDrop={handleDrop}
       onClick={() => document.getElementById("file-input")?.click()}
     >
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
       <input
         id="file-input"
         type="file"
@@ -51,23 +54,44 @@ export function UploadZone({ onFileSelected, isUploading }: UploadZoneProps) {
         className="hidden"
         onChange={handleChange}
       />
-      <div className="flex flex-col items-center gap-3">
-        <div className="text-4xl">
+
+      <div className="relative flex flex-col items-center gap-5 py-16 px-8">
+        <div
+          className={`relative flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 ${
+            isDragging
+              ? "bg-primary/20 text-primary"
+              : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+          }`}
+        >
           {isUploading ? (
-            <span className="animate-spin inline-block">&#9696;</span>
+            <Disc3 className="w-7 h-7 animate-spin" />
           ) : (
-            "🎵"
+            <Upload className="w-7 h-7" />
+          )}
+          {isDragging && (
+            <div className="absolute inset-0 rounded-2xl border-2 border-primary animate-ping opacity-30" />
           )}
         </div>
-        <div>
-          <p className="text-lg font-medium">
-            {isUploading ? "Uploading..." : "Drop your audio file here"}
+
+        <div className="text-center space-y-1.5">
+          <p className="text-base font-medium text-foreground">
+            {isUploading
+              ? "Uploading..."
+              : isDragging
+                ? "Drop to upload"
+                : "Drop your audio file here"}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            MP3, WAV, FLAC, M4A, OGG, AAC — up to 100MB
+          <p className="text-sm text-muted-foreground">
+            or{" "}
+            <span className="text-primary/80 underline underline-offset-4 decoration-primary/30">
+              browse files
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground/60 pt-1">
+            MP3, WAV, FLAC, M4A, OGG, AAC &mdash; up to 100 MB
           </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

@@ -6,10 +6,17 @@ import { WaveformPlayer } from "@/components/waveform-player";
 import { StemPlayer } from "@/components/stem-player";
 import { AnalysisCard } from "@/components/analysis-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Disc3,
+  AudioLines,
+  Layers,
+  ScanSearch,
+  ShieldCheck,
+  UploadCloud,
+  ArrowLeft,
+} from "lucide-react";
 import {
   uploadTrack,
   separateStems,
@@ -30,6 +37,13 @@ type ProcessingStep =
   | "analyzing"
   | "done";
 
+const PIPELINE_STEPS = [
+  { key: "uploading", label: "Upload", icon: UploadCloud },
+  { key: "separating", label: "Stems", icon: Layers },
+  { key: "transcribing", label: "Lyrics", icon: AudioLines },
+  { key: "analyzing", label: "Analysis", icon: ScanSearch },
+] as const;
+
 export default function Home() {
   const [step, setStep] = useState<ProcessingStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -46,17 +60,14 @@ export default function Home() {
     setAnalysis(null);
 
     try {
-      // Step 1: Upload
       setStep("uploading");
       const uploaded = await uploadTrack(file);
       setTrack(uploaded);
 
-      // Step 2: Separate stems
       setStep("separating");
       const separated = await separateStems(uploaded.track_id);
       setStems(separated);
 
-      // Step 3: Transcribe
       setStep("transcribing");
       let lyrics: string | undefined;
       try {
@@ -64,11 +75,9 @@ export default function Home() {
         setTranscription(transcribed);
         lyrics = transcribed.text;
       } catch {
-        // Transcription is optional
         console.warn("Transcription unavailable");
       }
 
-      // Step 4: Analyze
       setStep("analyzing");
       try {
         const analyzed = await analyzeTrack(uploaded.track_id, lyrics);
@@ -84,226 +93,318 @@ export default function Home() {
     }
   }, []);
 
-  const stepLabels: Record<ProcessingStep, string> = {
-    idle: "",
-    uploading: "Uploading audio...",
-    separating: "Separating stems with Demucs (this takes a minute)...",
-    transcribing: "Transcribing lyrics with Whisper...",
-    analyzing: "Analyzing mood, genre, and themes...",
-    done: "Processing complete",
+  const reset = () => {
+    setStep("idle");
+    setTrack(null);
+    setStems(null);
+    setTranscription(null);
+    setAnalysis(null);
+    setError(null);
   };
 
+  const loadDemo = () => {
+    setTrack({
+      track_id: "92761899",
+      filename: "rick-springsteen.mp3",
+      size: 307243,
+      path: "/Volumes/OWC drive/Dev/music/rebreath/backend/data/uploads/92761899_rick-springsteen.mp3",
+    });
+    setStems({
+      track_id: "92761899",
+      stems: {
+        vocals:
+          "/files/stems/htdemucs/92761899_rick-springsteen/vocals.mp3",
+        drums:
+          "/files/stems/htdemucs/92761899_rick-springsteen/drums.mp3",
+        bass: "/files/stems/htdemucs/92761899_rick-springsteen/bass.mp3",
+        other:
+          "/files/stems/htdemucs/92761899_rick-springsteen/other.mp3",
+      },
+    });
+    setTranscription({
+      track_id: "92761899",
+      text: "I've done everything for you\nYou've done nothing for me\nI've done everything for you\nYou've done nothing for me",
+      segments: [
+        { start: 0.0, end: 3.6, text: "I've done everything for you" },
+        { start: 4.6, end: 6.0, text: "You've done nothing for me" },
+        { start: 6.0, end: 9.6, text: "I've done everything for you" },
+        { start: 10.6, end: 12.6, text: "You've done nothing for me" },
+      ],
+      language: "en",
+    });
+    setAnalysis({
+      track_id: "92761899",
+      mood: "melancholic",
+      energy: 5,
+      genres: ["rock", "alternative rock", "indie rock"],
+      themes: [
+        "frustration",
+        "one-sided relationship",
+        "emotional exhaustion",
+        "resentment",
+        "imbalance",
+      ],
+      tempo_feel: "medium",
+      description:
+        "An introspective rock track that explores the emotional toll of a one-sided relationship, with repetitive lyrics emphasizing the speaker's sense of sacrifice and lack of reciprocation.",
+    });
+    setStep("done");
+  };
+
+  const currentStepIndex = PIPELINE_STEPS.findIndex((s) => s.key === step);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">ReBreath</h1>
-            <Badge variant="secondary">AI Music Reimaginer</Badge>
+            <Disc3 className="w-5 h-5 text-primary" />
+            <span
+              className="text-lg font-bold tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              ReBreath
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            Upload your music. AI reimagines it.
-          </p>
+          {track && step === "done" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={reset}
+              className="text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              New track
+            </Button>
+          )}
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Upload Section */}
+      <main className="max-w-5xl mx-auto px-6 py-10">
+        {/* Landing / Upload */}
         {step === "idle" && !track && (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Reimagine Your Music</h2>
-              <p className="text-muted-foreground max-w-lg mx-auto">
-                Drop an audio file and AI will separate stems, transcribe
-                lyrics, analyze mood and energy, and let you hear your music in
-                new ways.
-              </p>
-            </div>
-            <UploadZone
-              onFileSelected={handleFileSelected}
-              isUploading={false}
-            />
-            <div className="text-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => {
-                  setTrack({
-                    track_id: "92761899",
-                    filename: "rick-springsteen.mp3",
-                    size: 307243,
-                    path: "/Volumes/OWC drive/Dev/music/rebreath/backend/data/uploads/92761899_rick-springsteen.mp3",
-                  });
-                  setStems({
-                    track_id: "92761899",
-                    stems: {
-                      vocals: "/files/stems/htdemucs/92761899_rick-springsteen/vocals.mp3",
-                      drums: "/files/stems/htdemucs/92761899_rick-springsteen/drums.mp3",
-                      bass: "/files/stems/htdemucs/92761899_rick-springsteen/bass.mp3",
-                      other: "/files/stems/htdemucs/92761899_rick-springsteen/other.mp3",
-                    },
-                  });
-                  setTranscription({
-                    track_id: "92761899",
-                    text: "I've done everything for you\nYou've done nothing for me\nI've done everything for you\nYou've done nothing for me",
-                    segments: [
-                      { start: 0.0, end: 3.6, text: "I've done everything for you" },
-                      { start: 4.6, end: 6.0, text: "You've done nothing for me" },
-                      { start: 6.0, end: 9.6, text: "I've done everything for you" },
-                      { start: 10.6, end: 12.6, text: "You've done nothing for me" },
-                    ],
-                    language: "en",
-                  });
-                  setAnalysis({
-                    track_id: "92761899",
-                    mood: "melancholic",
-                    energy: 5,
-                    genres: ["rock", "alternative rock", "indie rock"],
-                    themes: ["frustration", "one-sided relationship", "emotional exhaustion", "resentment", "imbalance"],
-                    tempo_feel: "medium",
-                    description: "An introspective rock track that explores the emotional toll of a one-sided relationship, with repetitive lyrics emphasizing the speaker's sense of sacrifice and lack of reciprocation.",
-                  });
-                  setStep("done");
-                }}
-              >
-                or load demo track
-              </Button>
-            </div>
+          <div className="animate-fade-in">
+            <div className="max-w-xl mx-auto space-y-10">
+              {/* Hero */}
+              <div className="text-center space-y-4 pt-8">
+                <h1
+                  className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  Reimagine
+                  <br />
+                  <span className="text-primary">your music</span>
+                </h1>
+                <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
+                  Upload a track and AI separates stems, transcribes lyrics, and
+                  analyzes mood &mdash; all locally, all rights-clear.
+                </p>
+              </div>
 
-            {/* Feature grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-              {[
-                {
-                  title: "Stem Separation",
-                  desc: "AI splits your track into vocals, drums, bass, and more",
-                  icon: "🎛️",
-                },
-                {
-                  title: "Smart Analysis",
-                  desc: "Mood, genre, energy, themes — AI understands your music",
-                  icon: "🔍",
-                },
-                {
-                  title: "Rights-Clear",
-                  desc: "Your music, your rights. Zero copyright risk.",
-                  icon: "✅",
-                },
-              ].map((f) => (
-                <Card key={f.title}>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">{f.icon}</div>
-                    <h3 className="font-semibold">{f.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+              {/* Upload */}
+              <UploadZone
+                onFileSelected={handleFileSelected}
+                isUploading={false}
+              />
+
+              <div className="text-center">
+                <button
+                  onClick={loadDemo}
+                  className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-border"
+                >
+                  load demo track
+                </button>
+              </div>
+
+              {/* Features */}
+              <div className="grid grid-cols-3 gap-3 pt-4">
+                {[
+                  {
+                    icon: Layers,
+                    title: "Stem Separation",
+                    desc: "Vocals, drums, bass, other",
+                  },
+                  {
+                    icon: ScanSearch,
+                    title: "Smart Analysis",
+                    desc: "Mood, genre, energy, themes",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    title: "Rights-Clear",
+                    desc: "Your music, zero risk",
+                  },
+                ].map((f) => (
+                  <div
+                    key={f.title}
+                    className="rounded-lg border border-border/30 p-4 space-y-2 text-center"
+                  >
+                    <f.icon className="w-5 h-5 mx-auto text-muted-foreground/50" />
+                    <p className="text-xs font-semibold text-foreground/80">
+                      {f.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/60">
                       {f.desc}
                     </p>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Processing status */}
+        {/* Processing Pipeline */}
         {step !== "idle" && step !== "done" && (
-          <Card className="mb-6">
-            <CardContent className="p-4 flex items-center gap-3">
-              <span className="animate-spin text-lg">&#9696;</span>
-              <div>
-                <p className="font-medium">{stepLabels[step]}</p>
-                {track && (
-                  <p className="text-sm text-muted-foreground">
-                    {track.filename} (
-                    {(track.size / 1024 / 1024).toFixed(1)} MB)
-                  </p>
-                )}
+          <div className="max-w-lg mx-auto pt-16 animate-fade-in">
+            <div className="space-y-8">
+              {/* Pipeline progress */}
+              <div className="flex items-center justify-between">
+                {PIPELINE_STEPS.map((s, i) => {
+                  const Icon = s.icon;
+                  const isActive = s.key === step;
+                  const isDone = i < currentStepIndex;
+
+                  return (
+                    <div key={s.key} className="flex items-center gap-2">
+                      <div className="flex flex-col items-center gap-2">
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${
+                            isActive
+                              ? "bg-primary/15 text-primary processing-active"
+                              : isDone
+                                ? "bg-primary/10 text-primary"
+                                : "bg-muted text-muted-foreground/40"
+                          }`}
+                        >
+                          {isActive ? (
+                            <Disc3 className="w-4.5 h-4.5 animate-spin" />
+                          ) : (
+                            <Icon className="w-4.5 h-4.5" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-[10px] font-semibold uppercase tracking-widest transition-colors ${
+                            isActive
+                              ? "text-primary"
+                              : isDone
+                                ? "text-foreground/60"
+                                : "text-muted-foreground/30"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      </div>
+                      {i < PIPELINE_STEPS.length - 1 && (
+                        <div
+                          className={`w-12 h-px mx-1 mb-6 transition-colors duration-500 ${
+                            isDone ? "bg-primary/30" : "bg-border/50"
+                          }`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Current file info */}
+              {track && (
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium text-foreground/80">
+                    {track.filename}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {(track.size / 1024 / 1024).toFixed(1)} MB
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Error */}
         {error && (
-          <Card className="mb-6 border-destructive">
-            <CardContent className="p-4">
-              <p className="text-destructive font-medium">Error: {error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => {
-                  setError(null);
-                  setStep("idle");
-                  setTrack(null);
-                }}
-              >
-                Try Again
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="max-w-lg mx-auto mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 animate-slide-up">
+            <p className="text-sm text-destructive font-medium">{error}</p>
+            <button
+              onClick={reset}
+              className="mt-2 text-xs text-destructive/70 underline underline-offset-4"
+            >
+              Try again
+            </button>
+          </div>
         )}
 
         {/* Results */}
         {track && (step === "done" || stems) && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-slide-up">
             {/* Track header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold">{track.filename}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {(track.size / 1024 / 1024).toFixed(1)} MB
-                </p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <AudioLines className="w-5 h-5 text-primary" />
               </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setStep("idle");
-                  setTrack(null);
-                  setStems(null);
-                  setTranscription(null);
-                  setAnalysis(null);
-                }}
-              >
-                Upload New Track
-              </Button>
+              <div>
+                <h2
+                  className="text-lg font-bold tracking-tight"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {track.filename.replace(/\.[^.]+$/, "")}
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-muted-foreground">
+                    {(track.size / 1024 / 1024).toFixed(1)} MB
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-primary/20 text-primary"
+                  >
+                    {track.filename.match(/\.([^.]+)$/)?.[1]?.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
             </div>
 
-            <Separator />
-
+            {/* Tabs */}
             <Tabs defaultValue="stems" className="w-full">
-              <TabsList>
-                <TabsTrigger value="original">Original</TabsTrigger>
-                <TabsTrigger value="stems" disabled={!stems}>
+              <TabsList className="bg-muted/50 border border-border/30">
+                <TabsTrigger value="original" className="gap-1.5 text-xs">
+                  <AudioLines className="w-3.5 h-3.5" />
+                  Original
+                </TabsTrigger>
+                <TabsTrigger
+                  value="stems"
+                  disabled={!stems}
+                  className="gap-1.5 text-xs"
+                >
+                  <Layers className="w-3.5 h-3.5" />
                   Stems
                 </TabsTrigger>
-                <TabsTrigger value="analysis" disabled={!analysis}>
+                <TabsTrigger
+                  value="analysis"
+                  disabled={!analysis}
+                  className="gap-1.5 text-xs"
+                >
+                  <ScanSearch className="w-3.5 h-3.5" />
                   Analysis
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="original" className="mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Original Track</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <WaveformPlayer
-                      url={fileUrl(`/files/uploads/${track.path.split("/").pop()}`)}
-                      label="Full Mix"
-                      color="#6366f1"
-                      height={100}
-                    />
-                  </CardContent>
-                </Card>
+                <div className="rounded-lg border border-border/50 bg-card/50 p-5 waveform-glow">
+                  <WaveformPlayer
+                    url={fileUrl(
+                      `/files/uploads/${track.path.split("/").pop()}`
+                    )}
+                    label="Full Mix"
+                    color="#f0a840"
+                    height={100}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="stems" className="mt-4">
                 {stems && (
-                  <StemPlayer
-                    stems={stems.stems}
-                    trackId={stems.track_id}
-                  />
+                  <StemPlayer stems={stems.stems} trackId={stems.track_id} />
                 )}
               </TabsContent>
 
@@ -311,9 +412,7 @@ export default function Home() {
                 <AnalysisCard
                   analysis={analysis}
                   transcription={transcription}
-                  isLoading={
-                    step === "analyzing" || step === "transcribing"
-                  }
+                  isLoading={step === "analyzing" || step === "transcribing"}
                 />
               </TabsContent>
             </Tabs>
@@ -321,14 +420,9 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <footer className="mt-16 py-8 border-t text-center text-sm text-muted-foreground">
-          <p>
-            ReBreath — AI Music Reimaginer. Built with Demucs, Whisper, and
-            Claude.
-          </p>
-          <p className="mt-1">
-            Zero API costs. Runs locally. Your music, your rights.
-          </p>
+        <footer className="mt-20 py-6 border-t border-border/30 flex items-center justify-between text-[11px] text-muted-foreground/40">
+          <span>ReBreath &mdash; AI Music Reimaginer</span>
+          <span>Zero API costs &middot; Runs locally &middot; Rights-clear</span>
         </footer>
       </main>
     </div>
