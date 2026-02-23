@@ -104,49 +104,39 @@ export default function Home() {
 
   const loadDemo = () => {
     setTrack({
-      track_id: "92761899",
-      filename: "rick-springsteen.mp3",
-      size: 307243,
-      path: "/Volumes/OWC drive/Dev/music/rebreath/backend/data/uploads/92761899_rick-springsteen.mp3",
+      track_id: "ad9cfd1e",
+      filename: "fur-elise-60s.mp3",
+      size: 1078870,
+      path: "/Volumes/OWC drive/Dev/music/rebreath/backend/data/uploads/ad9cfd1e_fur-elise-60s.mp3",
     });
     setStems({
-      track_id: "92761899",
+      track_id: "ad9cfd1e",
       stems: {
         vocals:
-          "/files/stems/htdemucs/92761899_rick-springsteen/vocals.mp3",
+          "/files/stems/htdemucs/ad9cfd1e_fur-elise-60s/vocals.mp3",
         drums:
-          "/files/stems/htdemucs/92761899_rick-springsteen/drums.mp3",
-        bass: "/files/stems/htdemucs/92761899_rick-springsteen/bass.mp3",
+          "/files/stems/htdemucs/ad9cfd1e_fur-elise-60s/drums.mp3",
+        bass: "/files/stems/htdemucs/ad9cfd1e_fur-elise-60s/bass.mp3",
         other:
-          "/files/stems/htdemucs/92761899_rick-springsteen/other.mp3",
+          "/files/stems/htdemucs/ad9cfd1e_fur-elise-60s/other.mp3",
       },
     });
-    setTranscription({
-      track_id: "92761899",
-      text: "I've done everything for you\nYou've done nothing for me\nI've done everything for you\nYou've done nothing for me",
-      segments: [
-        { start: 0.0, end: 3.6, text: "I've done everything for you" },
-        { start: 4.6, end: 6.0, text: "You've done nothing for me" },
-        { start: 6.0, end: 9.6, text: "I've done everything for you" },
-        { start: 10.6, end: 12.6, text: "You've done nothing for me" },
-      ],
-      language: "en",
-    });
+    setTranscription(null);
     setAnalysis({
-      track_id: "92761899",
+      track_id: "ad9cfd1e",
       mood: "melancholic",
-      energy: 5,
-      genres: ["rock", "alternative rock", "indie rock"],
+      energy: 4,
+      genres: ["classical", "piano", "romantic"],
       themes: [
-        "frustration",
-        "one-sided relationship",
-        "emotional exhaustion",
-        "resentment",
-        "imbalance",
+        "introspection",
+        "elegance",
+        "nostalgia",
+        "contemplation",
+        "timelessness",
       ],
-      tempo_feel: "medium",
+      tempo_feel: "slow",
       description:
-        "An introspective rock track that explores the emotional toll of a one-sided relationship, with repetitive lyrics emphasizing the speaker's sense of sacrifice and lack of reciprocation.",
+        "Beethoven's iconic 'Für Elise' — a delicate, introspective piano piece evoking romantic melancholy and graceful pensiveness. This interpretation strips the work to its emotional core, creating an intimate and contemplative listening experience.",
     });
     setStep("done");
   };
@@ -213,7 +203,7 @@ export default function Home() {
                   onClick={loadDemo}
                   className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-border"
                 >
-                  load demo track
+                  try demo: Beethoven &mdash; Für Elise
                 </button>
               </div>
 
